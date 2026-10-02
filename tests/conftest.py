@@ -7,7 +7,19 @@ kann jeder Test einfach als Parameter anfordern, ohne sie zu importieren.
 import pytest
 import requests
 
-from wetter import api
+from wetter import api, db
+
+
+@pytest.fixture
+def test_db_path(tmp_path, monkeypatch):
+    """Biegt DB_PATH für die Dauer eines Tests auf eine temporäre Datei um.
+
+    So können Tests main() aufrufen, ohne die echte wetter.db im
+    Projektordner zu verändern. Gibt den Pfad der Test-Datenbank zurück.
+    """
+    path = tmp_path / "wetter.db"
+    monkeypatch.setattr(db, "DB_PATH", path)
+    return path
 
 
 @pytest.fixture

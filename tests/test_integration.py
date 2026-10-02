@@ -31,16 +31,14 @@ def test_fetch_save_and_average(mock_api, sample_json, tmp_path):
     assert average_temperature(db_path) == pytest.approx(20.0)
 
 
-def test_main_end_to_end(mock_api, sample_json, tmp_path, monkeypatch, capsys):
+def test_main_end_to_end(mock_api, sample_json, test_db_path, capsys):
     """Startet main() wie "python main.py", aber ohne Internet.
 
-    - monkeypatch.chdir wechselt für diesen Test in den temporären Ordner.
-      Da DB_PATH ein relativer Pfad ist, landet wetter.db dort und nicht
-      im Projektordner.
+    - Die Fixture test_db_path biegt DB_PATH auf eine Test-Datenbank um,
+      damit die echte wetter.db im Projektordner unberührt bleibt.
     - capsys fängt alles ab, was mit print() ausgegeben wird.
     """
     mock_api(json_data=sample_json)
-    monkeypatch.chdir(tmp_path)
 
     main.main()
 
@@ -48,17 +46,16 @@ def test_main_end_to_end(mock_api, sample_json, tmp_path, monkeypatch, capsys):
     assert "2026-09-25" in output
     assert "2026-09-26" in output
     assert "Durchschnittstemperatur: 20.0 °C" in output
-    # Die Datenbank wurde wirklich im temporären Ordner angelegt.
-    assert (tmp_path / "wetter.db").exists()
+    # Die Datenbank wurde wirklich am umgebogenen Pfad angelegt.
+    assert test_db_path.exists()
 
 
-def test_main_twice_creates_no_duplicates(mock_api, sample_json, tmp_path, monkeypatch, capsys):
+def test_main_twice_creates_no_duplicates(mock_api, sample_json, test_db_path, capsys):
     # Wie zwei Programmstarts hintereinander mit denselben API-Daten.
     mock_api(json_data=sample_json)
-    monkeypatch.chdir(tmp_path)
 
     main.main()
     main.main()
 
-    # get_all_records ohne Pfad nutzt "wetter.db" im aktuellen Ordner (tmp_path).
+    # get_all_records ohne Pfad nutzt DB_PATH, also die Test-Datenbank.
     assert len(get_all_records()) == 2

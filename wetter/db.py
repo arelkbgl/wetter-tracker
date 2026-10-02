@@ -5,17 +5,28 @@ die ganze Datenbank in einer einzigen Datei.
 """
 
 import sqlite3
+from pathlib import Path
 
-# Name der Datenbankdatei. Sie wird beim ersten Zugriff automatisch angelegt.
-DB_PATH = "wetter.db"
+# Pfad zur Datenbankdatei. Sie wird beim ersten Zugriff automatisch angelegt.
+# __file__ ist der Pfad dieser Datei (wetter/db.py). .parent.parent geht zwei
+# Ebenen hoch zum Projektordner. So liegt die Datenbank immer dort, egal aus
+# welchem Ordner das Programm gestartet wird.
+DB_PATH = Path(__file__).resolve().parent.parent / "wetter.db"
 
 
-def get_connection(db_path=DB_PATH):
-    """Öffnet eine Verbindung zur Datenbank."""
+def get_connection(db_path=None):
+    """Öffnet eine Verbindung zur Datenbank.
+
+    Ohne Angabe wird DB_PATH verwendet. Wir lesen DB_PATH bewusst erst hier
+    beim Aufruf (und nicht als Standardwert db_path=DB_PATH), damit Tests
+    den Pfad mit monkeypatch auf eine Test-Datenbank umbiegen können.
+    """
+    if db_path is None:
+        db_path = DB_PATH
     return sqlite3.connect(db_path)
 
 
-def init_db(db_path=DB_PATH):
+def init_db(db_path=None):
     """Legt die Tabelle an, falls sie noch nicht existiert."""
     # "with" sorgt dafür, dass Änderungen am Ende gespeichert (commit) werden.
     with get_connection(db_path) as conn:
@@ -33,7 +44,7 @@ def init_db(db_path=DB_PATH):
     conn.close()
 
 
-def save_records(records, db_path=DB_PATH):
+def save_records(records, db_path=None):
     """Speichert eine Liste von Tageswerten (Upsert).
 
     Gibt es für ein Datum schon eine Zeile, werden ihre Werte
@@ -58,7 +69,7 @@ def save_records(records, db_path=DB_PATH):
     conn.close()
 
 
-def average_temperature(db_path=DB_PATH):
+def average_temperature(db_path=None):
     """Berechnet die Durchschnittstemperatur über alle gespeicherten Tage.
 
     Pro Tag nehmen wir die Mitte aus Höchst- und Tiefstwert und bilden
@@ -75,7 +86,7 @@ def average_temperature(db_path=DB_PATH):
     return row[0]
 
 
-def get_all_records(db_path=DB_PATH):
+def get_all_records(db_path=None):
     """Gibt alle gespeicherten Tage sortiert nach Datum zurück."""
     conn = get_connection(db_path)
     rows = conn.execute(

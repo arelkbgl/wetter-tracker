@@ -5,9 +5,15 @@ leeren temporären Ordner. Dort legen wir eine Test-Datenbank an, damit
 die echte wetter.db nie verändert wird.
 """
 
+from pathlib import Path
+
 import pytest
 
+from wetter import db
 from wetter.db import average_temperature, get_all_records, init_db, save_records
+
+# Projektordner = eine Ebene über dem Ordner tests/, in dem diese Datei liegt.
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 
 @pytest.fixture
@@ -91,3 +97,14 @@ def test_average_temperature_ignores_days_with_missing_values(db_path):
         db_path,
     )
     assert average_temperature(db_path) == pytest.approx(15.0)
+
+
+def test_db_path_points_to_project_folder_from_any_cwd(tmp_path, monkeypatch):
+    # Issue #2: Wir simulieren, dass main.py aus einem anderen Ordner
+    # gestartet wird, indem wir das Arbeitsverzeichnis wechseln.
+    monkeypatch.chdir(tmp_path)
+
+    # resolve() macht aus dem Pfad einen absoluten Pfad. Bei einem relativen
+    # Pfad hängt das Ergebnis vom aktuellen Arbeitsverzeichnis ab, bei einem
+    # korrekten Pfad zeigt er trotzdem immer in den Projektordner.
+    assert Path(db.DB_PATH).resolve() == PROJECT_ROOT / "wetter.db"
