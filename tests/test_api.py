@@ -84,6 +84,15 @@ def test_parse_response_with_missing_field_raises_key_error(sample_json, missing
         parse_response(sample_json)
 
 
+def test_parse_response_with_unequal_list_lengths_raises_value_error(sample_json):
+    # Issue #1: Fehlt in einer Liste ein Wert, dürfen die übrigen Daten
+    # nicht still abgeschnitten werden. Wir erwarten einen klaren Fehler.
+    sample_json["daily"]["temperature_2m_max"].pop()  # nur noch 1 statt 2 Werte
+
+    with pytest.raises(ValueError):
+        parse_response(sample_json)
+
+
 # ---------------------------------------------------------------------------
 # fetch_weather: HTTP-Aufruf gemockt
 # ---------------------------------------------------------------------------

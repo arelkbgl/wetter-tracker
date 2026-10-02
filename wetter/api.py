@@ -56,11 +56,14 @@ def parse_response(json_data):
     records = []
     # zip() geht die vier Listen parallel durch: erstes Element jeder Liste,
     # dann das zweite usw. So gehören Datum und Werte immer zusammen.
+    # strict=True: Sind die Listen unterschiedlich lang, wirft zip einen
+    # ValueError, statt die überzähligen Werte still wegzulassen.
     for date, temp_max, temp_min, precipitation in zip(
         daily["time"],
         daily["temperature_2m_max"],
         daily["temperature_2m_min"],
         daily["precipitation_sum"],
+        strict=True,
     ):
         records.append(
             {
