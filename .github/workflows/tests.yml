@@ -1,0 +1,30 @@
+# Führt bei jedem Push und Pull Request auf main alle Tests aus.
+# Die Tests brauchen kein Internet: Die Open-Meteo-API wird in den Tests gemockt.
+# (Internet wird nur für "pip install" der Abhängigkeiten benötigt.)
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Code des Repositorys auf den Runner holen.
+      - uses: actions/checkout@v5
+
+      # Python 3.13 installieren; cache: pip beschleunigt spätere Läufe.
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Abhängigkeiten installieren
+        run: pip install -r requirements.txt
+
+      - name: Tests ausführen
+        run: pytest -v
